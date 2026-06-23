@@ -314,7 +314,7 @@
                     }
 
                 }else{
-                    speak("Response Error please Check your plan")
+                    speak(data.message || "Response error. Please check your assistant setup.")
 
                 }
 
@@ -345,3 +345,4 @@
 
 
 })();
+

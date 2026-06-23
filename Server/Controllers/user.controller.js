@@ -40,7 +40,15 @@ export const saveAssistant = async (req,res) => {
         user.theme = theme;
 
         if(geminiApiKey){
-            user.geminiApiKey = geminiApiKey;
+            const cleanGeminiApiKey = geminiApiKey.trim();
+
+            if (cleanGeminiApiKey.length < 20) {
+                return res.status(400).json({
+                    message: "Please add a valid Gemini API key",
+                });
+            }
+
+            user.geminiApiKey = cleanGeminiApiKey;
         }
         user.geminiStatus = "active";
         user.pages = pages || [];
@@ -55,4 +63,6 @@ export const saveAssistant = async (req,res) => {
         return res.status(500).json({message:`failed to save Assistant ${error}`})
     }
 }
+
+
 

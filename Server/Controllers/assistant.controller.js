@@ -51,6 +51,23 @@ export const askAssistant = async (req, res) => {
 
         const cleanMessage = message.toLowerCase()
 
+        const asksHindiSupport =
+            cleanMessage.includes("speak hindi") ||
+            cleanMessage.includes("talk hindi") ||
+            cleanMessage.includes("hindi bol") ||
+            cleanMessage.includes("hindi mein") ||
+            cleanMessage.includes("hindi me") ||
+            cleanMessage.includes("can you speak hindi") ||
+            cleanMessage.includes("can u speak hindi");
+
+        if (asksHindiSupport) {
+            return res.json({
+                success: true,
+                aiResponse:
+                    "Haan, main Hindi mein baat kar sakta hoon. Aap apna sawaal Hindi mein pooch sakte hain.",
+            });
+        }
+
         if (user.enableNavigation) {
 
             // Navigation Commands
@@ -144,12 +161,13 @@ ${user.tone}
 
 Rules:
 
-- Keep replies under 15 words
-- Give fast direct responses
-- Talk naturally
-- Behave like smart voice assistant
-- Avoid long explanations
-- Keep responses short for quick voice playback
+- Answer in 2 to 4 clear short sentences
+- Give helpful, complete answers without cutting off words
+- Talk naturally in a friendly voice-assistant style
+- Use the business details above when the question is about this website or assistant
+- For very simple greetings, reply briefly
+- Avoid very long explanations unless the user asks for details
+- Always finish the final sentence; never stop mid-word or mid-sentence
 
 User Question:
 ${message}
@@ -176,10 +194,16 @@ ${message}
         return  res.status(500).json({
                 success: false,
                 message:
-                    "Assistant AI Error",
+                    "Sorry, I could not answer that right now. Please try again in a moment.",
             });
 
     }
 }
+
+
+
+
+
+
 
 
