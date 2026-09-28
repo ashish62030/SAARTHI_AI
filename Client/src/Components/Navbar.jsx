@@ -1,108 +1,139 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { NavLink, useNavigate } from 'react-router-dom'
 import logo from "../assets/logo.png"
-import { FiLogOut, FiMenu, FiX } from "react-icons/fi";
-import axios from 'axios';
-import { ServerUrl } from '../App';
-import toast from 'react-hot-toast';
-function Navbar({user , setUser}) {
+import { FiLogOut, FiMenu, FiX } from "react-icons/fi"
+import axios from 'axios'
+import { ServerUrl } from '../App'
+import toast from 'react-hot-toast'
+
+const links = [
+  { to: "/builder", label: "Assistant Builder" },
+  { to: "/billing", label: "Billing" },
+]
+
+function Navbar({ user, setUser }) {
   const navigate = useNavigate()
-  const [menuOpen,setMenuOpen] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const initial = user?.name?.trim()?.charAt(0)?.toUpperCase() || "U"
 
   const handleLogout = async () => {
     try {
-      await axios.get(ServerUrl + "/api/auth/logout" , {withCredentials:true})
+      await axios.get(ServerUrl + "/api/auth/logout", { withCredentials: true })
       setUser(null)
-      toast.success("Logout Successfully")
+      toast.success("Logged out")
       navigate("/login")
     } catch (error) {
-      toast.error("logout failed")
-      console.log(error)
+      toast.error("Could not log out. Please try again.")
+      console.error(error)
     }
   }
+
+  const desktopLinkClass = ({ isActive }) =>
+    `rounded-xl px-4 py-2.5 text-sm font-semibold transition-colors ${isActive
+      ? "bg-purple-50 text-purple-700"
+      : "text-slate-600 hover:bg-slate-50 hover:text-slate-950"}`
+
+  const mobileLinkClass = ({ isActive }) =>
+    `rounded-xl px-4 py-3 text-sm font-semibold transition-colors ${isActive
+      ? "bg-purple-50 text-purple-700"
+      : "text-slate-600 hover:bg-slate-50"}`
+
   return (
-    <div className='sticky top-0 z-50 backdrop-blur-xl bg-white/80 border-b border-orange-100'>
-      <div className='max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between'>
+    <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/90 backdrop-blur-xl">
+      <div className="mx-auto flex h-[72px] max-w-7xl items-center justify-between px-4 sm:px-6">
+        <button
+          type="button"
+          onClick={() => navigate("/")}
+          className="flex items-center gap-2.5 rounded-xl text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-purple-500"
+          aria-label="Saarthi AI home"
+        >
+          <img src={logo} alt="" className="h-9 w-auto object-contain" />
+          <span className="text-lg font-bold tracking-tight text-slate-900">
+            Saarthi<span className="bg-gradient-to-r from-purple-500 to-emerald-500 bg-clip-text text-transparent">AI</span>
+          </span>
+        </button>
 
-        <div onClick={()=>navigate("/")} className='flex items-center gap-2.5'>
-          <img src={logo} alt="logo" className='h-9 w-auto object-contain' />
+        {user && (
+          <div className="hidden items-center gap-2 md:flex">
+            <nav aria-label="Main navigation" className="flex items-center gap-1">
+              {links.map((link) => (
+                <NavLink key={link.to} to={link.to} className={desktopLinkClass}>
+                  {link.label}
+                </NavLink>
+              ))}
+            </nav>
 
-          <h1 className='font-bold text-xl text-gray-700 leading-none'>Saarthi{" "}<span className='text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-emerald-500'>AI</span></h1>
-
-        </div>
-
-
-        {user && (<div className='hidden md:flex items-center gap-3'>
-
-          <button onClick={()=>navigate("/builder")} className='px-4 py-2 rounded-xl bg-gradient-to-r from-purple-500 to-emerald-500 text-white text-sm font-medium shadow-md hover:scale-[1.02] transition-all cursor-pointer'>Builder</button>
-
-          <button onClick={()=>navigate("/billing")} className='px-4 py-2 rounded-xl border border-orange-100 bg-white text-gray-700 text-sm font-medium hover:border-purple-300 transition-all cursor-pointer'>Billing</button>
-
-          <div className='flex items-center gap-3 px-4 py-2 rounded-2xl bg-white border border-orange-100 shadow-sm'>
-
-            <div className='w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-emerald-500 flex items-center justify-center flex-shrink-0'>
-              <span className='text-white text-sm font-bold'>
-                {user?.name.charAt(0).toUpperCase()}
-              </span>
+            <div className="ml-3 flex items-center gap-3 border-l border-slate-200 pl-4">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-emerald-500 text-sm font-bold text-white shadow-sm">
+                {initial}
+              </div>
+              <div className="max-w-[150px]">
+                <p className="truncate text-sm font-semibold text-slate-800">{user.name}</p>
+                <p className="truncate text-xs text-slate-500">{user.email}</p>
+              </div>
+              <button
+                type="button"
+                onClick={handleLogout}
+                aria-label="Log out"
+                title="Log out"
+                className="ml-1 rounded-lg p-2 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-purple-500"
+              >
+                <FiLogOut size={18} />
+              </button>
             </div>
-
-            <div className='max-w-[140px]'>
-              <p className='text-sm font-semibold text-gray-800 truncate'>{user.name}</p>
-
-              <p className='text-xs text-gray-400 truncate'>{user.email}</p>
-
-             
-            </div>
-             <button onClick={handleLogout} className='ml-1 text-gray-400 hover:text-red-500 transition-colors cursor-pointer'><FiLogOut size={18}/></button>
-
-
           </div>
-          
-          </div>)}
+        )}
 
-
-          {user && (
-            <button onClick={()=>setMenuOpen(!menuOpen)} className='md:hidden text-gray-600 hover:text-purple-500 transition-colors'>
-
-              {menuOpen ? <FiX size={22}/> : <FiMenu size={22}/>}
-
-
-            </button>
-          )}
-
-
+        {user && (
+          <button
+            type="button"
+            onClick={() => setMenuOpen((open) => !open)}
+            aria-label={menuOpen ? "Close navigation menu" : "Open navigation menu"}
+            aria-expanded={menuOpen}
+            className="rounded-xl p-2.5 text-slate-600 transition-colors hover:bg-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-purple-500 md:hidden"
+          >
+            {menuOpen ? <FiX size={21} /> : <FiMenu size={21} />}
+          </button>
+        )}
       </div>
 
-
-      {menuOpen && (
-        <div className='md:hidden px-4 pb-4'>
-
-          <div className='bg-white rounded-2xl border border-orange-100 shadow-lg p-4'>
-            <div className='flex items-center gap-3 pb-4 border-b border-orange-100'>
-              <div className='w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-emerald-500 flex items-center justify-center flex-shrink-0'>
-              <span className='text-white text-sm font-bold'>
-                {user?.name.charAt(0).toUpperCase()}
-              </span>
+      {user && menuOpen && (
+        <div className="border-t border-slate-100 px-4 pb-4 pt-3 md:hidden">
+          <div className="mx-auto max-w-7xl rounded-2xl border border-slate-200 bg-white p-3 shadow-lg shadow-slate-900/5">
+            <div className="flex items-center gap-3 border-b border-slate-100 px-2 pb-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-emerald-500 text-sm font-bold text-white">
+                {initial}
+              </div>
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold text-slate-800">{user.name}</p>
+                <p className="truncate text-xs text-slate-500">{user.email}</p>
+              </div>
             </div>
 
-            <div className='flex-1 overflow-hidden'>
-              <p className='text-sm font-semibold text-gray-800 truncate'>{user.name}</p>
+            <nav aria-label="Mobile navigation" className="mt-2 flex flex-col gap-1">
+              {links.map((link) => (
+                <NavLink
+                  key={link.to}
+                  to={link.to}
+                  className={mobileLinkClass}
+                  onClick={() => setMenuOpen(false)}
+                >
+                  {link.label}
+                </NavLink>
+              ))}
+            </nav>
 
-              <p className='text-xs text-gray-400 truncate'>{user.email}</p>  
-            </div>
-            </div>
-
-            <div className='flex flex-col gap-3 mt-4'>
-              <button className='w-full py-2.5 rounded-xl bg-gradient-to-r from-purple-500 to-emerald-500 text-white text-sm font-medium' onClick={()=>{navigate("/builder");setMenuOpen(false)}}>Bulider</button>
-              <button className='w-full py-2.5 rounded-xl border border-orange-100 bg-white text-gray-700 text-sm font-medium' onClick={()=>{navigate("/billing");setMenuOpen(false)}}>Billing</button>
-            </div>
-
-            <button onClick={()=>{setMenuOpen(false);handleLogout()}} className='mt-4 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-red-50 text-red-500 hover:bg-red-100 transition-colors text-sm font-medium'><FiLogOut size={16}/> LogOut</button>
+            <button
+              type="button"
+              onClick={() => { setMenuOpen(false); handleLogout() }}
+              className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-600 transition-colors hover:bg-red-100"
+            >
+              <FiLogOut size={16} /> Log out
+            </button>
           </div>
-          </div>
+        </div>
       )}
-      
-    </div>
+    </header>
   )
 }
 

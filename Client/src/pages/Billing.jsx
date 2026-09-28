@@ -1,8 +1,27 @@
 import axios from 'axios';
 import { useEffect, useState } from 'react';
+import { FiCheck } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { ServerUrl } from '../App';
+
+const freeFeatures = ["200 AI messages", "Voice assistant", "Navigation support", "Basic customization"]
+const proFeatures = ["Unlimited AI messages", "Advanced AI assistant", "Priority performance", "Unlimited navigation", "Premium support"]
+
+function FeatureList({ items, premium = false }) {
+  return (
+    <ul className={`mt-6 space-y-3.5 ${premium ? 'text-white/90' : 'text-slate-600'}`}>
+      {items.map((item) => (
+        <li key={item} className="flex items-start gap-3 text-sm leading-6">
+          <span className={`mt-1 flex h-4 w-4 shrink-0 items-center justify-center rounded-full ${premium ? 'bg-white/15 text-emerald-200' : 'bg-emerald-50 text-emerald-600'}`}>
+            <FiCheck size={11} strokeWidth={3} />
+          </span>
+          {item}
+        </li>
+      ))}
+    </ul>
+  )
+}
 
 function Billing({ user ,setUser}) {
   const navigate = useNavigate()
@@ -112,44 +131,45 @@ function Billing({ user ,setUser}) {
       }
 
   return (
-    <div className='min-h-screen bg-[#f7f8fc] px-4 py-10'>
+    <div className='min-h-screen bg-[radial-gradient(ellipse_at_top,_#f4efff_0,_#f7f8fc_36rem)] px-4 py-8 sm:py-10'>
 
-      <div className='max-w-5xl mx-auto'>
+      <div className='mx-auto max-w-5xl'>
 
         <div className='mb-8'>
-          <h2 className='text-3xl font-bold text-[#081028]'>
+          <p className='text-xs font-bold uppercase tracking-[0.18em] text-purple-600'>Workspace / Billing</p>
+          <h2 className='mt-2 text-3xl font-bold tracking-tight text-[#081028] sm:text-4xl'>
             Billing & Subscription
           </h2>
-          <p className='text-gray-500 mt-1'>  Manage your AI assistant plan and usage.</p>
+          <p className='mt-2 text-sm text-slate-500 sm:text-base'>Manage your plan and keep track of assistant usage.</p>
         </div>
 
         <div className='grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6'>
 
 
-          <div className='bg-white rounded-3xl p-6 border border-gray-100 shadow-sm'>
+          <div className='rounded-2xl border border-white bg-white/90 p-5 shadow-[0_12px_36px_rgba(15,23,42,0.05)] sm:p-6'>
 
-            <p className='text-sm text-gray-400'>Current Plan</p>
-            <h2 className='text-xl font-bold text-[#081028] mt-1 capitalize'>{effectivePlan}</h2>
+            <p className='text-xs font-semibold uppercase tracking-wider text-slate-400'>Current plan</p>
+            <h2 className='mt-2 text-2xl font-bold capitalize tracking-tight text-[#081028]'>{effectivePlan}</h2>
           </div>
 
 
-          <div className='bg-white rounded-3xl p-6 border border-gray-100 shadow-sm'>
+          <div className='rounded-2xl border border-white bg-white/90 p-5 shadow-[0_12px_36px_rgba(15,23,42,0.05)] sm:p-6'>
 
-            <p className='text-sm text-gray-400'>Gemini Status</p>
-            <h2 className={`text-xl font-bold mt-1 capitalize ${user?.geminiStatus === "active"
-              ? "text-emerald-600"
+            <p className='text-xs font-semibold uppercase tracking-wider text-slate-400'>Gemini status</p>
+            <span className={`mt-2 inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-semibold capitalize ${user?.geminiStatus === "active"
+              ? "bg-emerald-50 text-emerald-700"
               : user?.geminiStatus === "invalid"
-                ? "text-red-500"
-                : "text-amber-500"
-              }`}>{user?.geminiStatus}</h2>
+                ? "bg-red-50 text-red-600"
+                : "bg-amber-50 text-amber-700"
+              }`}><span className="h-1.5 w-1.5 rounded-full bg-current" />{user?.geminiStatus}</span>
           </div>
 
-          <div className='bg-white rounded-3xl p-6 border border-gray-100 shadow-sm'>
+          <div className='rounded-2xl border border-white bg-white/90 p-5 shadow-[0_12px_36px_rgba(15,23,42,0.05)] sm:p-6'>
 
-            <p className='text-sm text-gray-400'>{!isProActive
+            <p className='text-xs font-semibold uppercase tracking-wider text-slate-400'>{!isProActive
               ? "Messages Left"
               : "Plan Expiry"}</p>
-            <h2 className='text-xl font-bold text-[#081028] mt-1 capitalize'>{!isProActive
+            <h2 className='mt-2 text-2xl font-bold tracking-tight text-[#081028]'>{!isProActive
               ? remainingMessages
               : `${remainingDays} Days`}</h2>
           </div>
@@ -160,59 +180,49 @@ function Billing({ user ,setUser}) {
 
           {/* free */}
 
-          <div className='bg-white rounded-3xl p-8 border border-gray-100 shadow-sm'>
-            <h2 className="text-2xl font-bold text-[#081028]">
+          <div className='rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_14px_45px_rgba(15,23,42,0.05)] sm:p-8'>
+            <span className="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">Start free</span>
+            <h2 className="mt-4 text-2xl font-bold tracking-tight text-[#081028]">
               Free Plan
             </h2>
 
-            <h3 className="text-5xl font-bold mt-5 text-[#081028]">
+            <h3 className="mt-4 text-5xl font-bold tracking-tight text-[#081028]">
               ₹0
             </h3>
 
-            <ul className="mt-6 space-y-4 text-gray-600">
-
-              <li>200 AI messages</li>
-              <li>Voice assistant</li>
-              <li>Navigation support</li>
-              <li>Basic customization</li>
-
-            </ul>
+            <p className="mt-1 text-sm text-slate-500">Free forever</p>
+            <FeatureList items={freeFeatures} />
 
           </div>
-{/* 
-         Pro */}
-          <div className='rounded-3xl p-8 bg-gradient-to-r from-purple-600 to-emerald-500 text-white shadow-lg'>
+          <div className='relative overflow-hidden rounded-[28px] border border-purple-400/20 bg-gradient-to-br from-[#17132f] via-[#3b2679] to-[#126e69] p-6 text-white shadow-[0_24px_60px_rgba(76,29,149,0.22)] sm:p-8'>
+            <div className="pointer-events-none absolute -right-20 -top-24 h-64 w-64 rounded-full bg-purple-400/20 blur-3xl" />
+            <div className="relative flex items-center justify-between gap-3">
 
-            <h2 className="text-2xl font-bold text-[#081028]">
+            <h2 className="text-2xl font-bold tracking-tight text-white">
               Pro Plan
             </h2>
+            <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-100">More power</span>
+            </div>
 
-            <h3 className="text-5xl font-bold mt-5 text-[#081028]">
+            <h3 className="relative mt-4 text-5xl font-bold tracking-tight text-white">
               ₹699
             </h3>
 
-            <p className='mt-2 opacity-80'>3 Months Access</p>
+            <p className='relative mt-1 text-sm text-white/65'>3 months of access</p>
 
             {user?.plan === "pro" && !isProActive && (
-              <p className='mt-3 rounded-xl bg-white/15 p-3 text-sm'>Your Pro plan has expired. Renew now to restore Pro access.</p>
+              <p className='relative mt-4 rounded-xl border border-white/15 bg-white/10 p-3 text-sm text-white/90'>Your Pro plan has expired. Renew to restore Pro access.</p>
             )}
 
-            <ul className='mt-6 space-y-4 opacity-90'>
-
-              <li>Unlimited AI messages</li>
-              <li>Advanced AI assistant</li>
-              <li>Priority performance</li>
-              <li>Unlimited navigation</li>
-              <li>Premium support</li>
-            </ul>
+            <div className="relative"><FeatureList items={proFeatures} premium /></div>
 
 
             <button
             onClick={handlePay}
 
-             disabled={isProActive} className={`mt-8 h-14 w-full rounded-2xl font-semibold transition ${isProActive
-                  ? "bg-emerald-200 text-black cursor-default"
-                  : "bg-white text-[#081028] cursor-pointer"
+             disabled={isProActive} className={`mt-8 h-14 w-full rounded-2xl font-semibold shadow-lg transition ${isProActive
+                  ? "cursor-default bg-emerald-200 text-emerald-950"
+                  : "cursor-pointer bg-white text-[#17132f] hover:-translate-y-0.5 hover:bg-emerald-50"
                 }`}>
                   {isProActive ? "Active Plan" : user?.plan === "pro" ? "Renew Plan" : "Upgrade Now"}
 
