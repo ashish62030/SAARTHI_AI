@@ -1,7 +1,7 @@
 const Gemini_MODELS = [
-  "gemini-2.5-flash",
-  "gemini-2.5-flash-lite",
-  "gemini-2.0-flash",
+  "gemini-3.8-flash",
+  "gemini-3.7-flash",
+  "gemini-3.6-flash",
 ]
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -23,10 +23,11 @@ export const generateGeminiResponse = async ({
     for (const model of Gemini_MODELS) {
         for (let attempt = 1; attempt <= 2; attempt++) {
             try {
-                const response = await fetch(`${getGeminiUrl(model)}?key=${apikey}`, {
+                const response = await fetch(getGeminiUrl(model), {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
+                        "x-goog-api-key": apikey,
                     },
                     body: JSON.stringify({
                         contents: [
@@ -39,35 +40,44 @@ export const generateGeminiResponse = async ({
                             }
                         ],
                         generationConfig: {
-                            temperature: 0.7,
                             maxOutputTokens: 500,
+                            thinkingConfig: {
+                                thinkingLevel: "low",
+                            },
                         },
                     })
                 })
 
-                const data = await response.json().catch(async () => ({
-                    error: {
-                        message: await response.text()
-                    }
-                }))
+                const responseText = await response.text()
+                let data = {}
+                try {
+                    data = responseText ? JSON.parse(responseText) : {}
+                } catch {
+                    data = { error: { message: responseText } }
+                }
 
                 if (!response.ok) {
                     const status = response.status
                     const message = data?.error?.message || "Gemini request failed"
 
-                    if (status === 400 || status === 401) {
+                    const isQuotaError = status === 429 ||
+                        /quota|resource.?exhausted|rate.?limit/i.test(message)
+                    const isInvalidKey = status === 401 ||
+                        ((status === 400 || status === 403) && /api.?key|credential|permission denied/i.test(message))
+
+                    if (isInvalidKey) {
                         user.geminiStatus = "invalid"
                         await user.save()
                         throw new Error("Gemini API key is invalid. Please add a valid key in Builder.")
                     }
 
-                    if (status === 429) {
+                    if (isQuotaError) {
                         user.geminiStatus = "quota_exceeded"
                         await user.save()
                         throw new Error("Gemini quota exceeded. Please check your Gemini API limit.")
                     }
 
-                    if (status === 503 && attempt < 2) {
+                    if ((status === 429 || status === 500 || status === 503) && attempt < 2) {
                         lastError = new Error("Gemini is busy right now. Retrying...")
                         await wait(800)
                         continue
@@ -116,9 +126,7 @@ export const generateGeminiResponse = async ({
 
     console.error("Gemini Fetch Error:", lastError?.message)
     throw new Error(
-        lastError?.message?.includes("high demand") ||
-        lastError?.message?.includes("busy") ||
-        lastError?.message?.includes("UNAVAILABLE")
+        /high demand|busy|UNAVAILABLE|temporarily unavailable/i.test(lastError?.message || "")
             ? "Gemini is busy right now. Please try again."
             : lastError?.message || "Gemini API fetch failed"
     )

@@ -113,10 +113,35 @@
     // toggle popup
 
     let open = false
+    let recognition = null
+    let pendingAskController = null
+    let pendingAskTimeout = null
+    let navigationTimeout = null
+
+    const resetAssistant = () => {
+        window.speechSynthesis?.cancel()
+        recognition?.abort()
+        pendingAskController?.abort()
+        pendingAskController = null
+        clearTimeout(pendingAskTimeout)
+        clearTimeout(navigationTimeout)
+        pendingAskTimeout = null
+        navigationTimeout = null
+        wave.style.opacity = "0"
+        status.innerText = "Tap button to Speak"
+        userText.innerText = ""
+        aiText.innerText = ""
+    }
 
     button.onclick = () => {
         open = !open;
         popup.style.display = open ? "flex" : "none";
+
+        if (!open) {
+            resetAssistant()
+        } else {
+            status.innerText = "Tap button to Speak"
+        }
     }
 
 
@@ -222,6 +247,7 @@
 
         // Voice end
         speech.onend = () => {
+            if (!open) return;
 
             status.innerText =
                 "Tap button to Speak";
@@ -242,7 +268,7 @@
 
     if(SpeechRecognition){
 
-        const recognition = new SpeechRecognition();
+        recognition = new SpeechRecognition();
 
         recognition.lang =
       "en-US";
@@ -255,6 +281,7 @@
 
 
       mic.onclick=()=>{
+        window.speechSynthesis?.cancel()
         wave.style.opacity =
         "1";
 
@@ -279,8 +306,11 @@
         recognition.stop();
 
 
-        setTimeout( async () => {
+        pendingAskTimeout = setTimeout( async () => {
+            const controller = new AbortController()
+            pendingAskController = controller
             try {
+                if (!open) return
                 status.innerText = "Thinking...";
                 
 
@@ -293,18 +323,21 @@
                     body:JSON.stringify({
                         message:text,
                         userId
-                    })
+                    }),
+                    signal: controller.signal,
                 })
 
                 const data = await res.json()
                 console.log(data)
+
+                if (!open || controller.signal.aborted) return
 
                 if(data.success){
 
                     if(data.action === "navigate"){
                         speak(data.response)
 
-                        setTimeout(()=>{
+                        navigationTimeout = setTimeout(()=>{
                             window.location.href = data.path
 
                         },1500)
@@ -321,14 +354,19 @@
 
 
             } catch (error) {
+                if (error.name === "AbortError") return
                 console.log(error)
                 speak("AI Server Error")
-                
+            } finally {
+                if (pendingAskController === controller) {
+                    pendingAskController = null
+                }
             }
         },600)
       };
 
       recognition.onerror = ()=>{
+        if (!open) return
         status.innerText =
           "Tap button to Speak";
 

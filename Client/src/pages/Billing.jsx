@@ -1,12 +1,23 @@
 import axios from 'axios';
-import React from 'react'
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { ServerUrl } from '../App';
 
 function Billing({ user ,setUser}) {
   const navigate = useNavigate()
+  const [currentTime, setCurrentTime] = useState(null)
+
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => setCurrentTime(Date.now()))
+    return () => cancelAnimationFrame(frame)
+  }, [])
+
+  const isProActive = user?.plan === "pro" &&
+    user?.proExpiresAt &&
+    currentTime !== null &&
+    new Date(user.proExpiresAt).getTime() > currentTime
+  const effectivePlan = isProActive ? "pro" : "free"
 
   useEffect(()=>{
     if(user && !user.isSetupComplete){
@@ -19,7 +30,7 @@ function Billing({ user ,setUser}) {
 
 
     }
-  },[])
+  },[navigate, user])
 
 
   const remainingMessages =
@@ -118,7 +129,7 @@ function Billing({ user ,setUser}) {
           <div className='bg-white rounded-3xl p-6 border border-gray-100 shadow-sm'>
 
             <p className='text-sm text-gray-400'>Current Plan</p>
-            <h2 className='text-xl font-bold text-[#081028] mt-1 capitalize'>{user?.plan}</h2>
+            <h2 className='text-xl font-bold text-[#081028] mt-1 capitalize'>{effectivePlan}</h2>
           </div>
 
 
@@ -135,10 +146,10 @@ function Billing({ user ,setUser}) {
 
           <div className='bg-white rounded-3xl p-6 border border-gray-100 shadow-sm'>
 
-            <p className='text-sm text-gray-400'>{user?.plan === "free"
+            <p className='text-sm text-gray-400'>{!isProActive
               ? "Messages Left"
               : "Plan Expiry"}</p>
-            <h2 className='text-xl font-bold text-[#081028] mt-1 capitalize'>{user?.plan === "free"
+            <h2 className='text-xl font-bold text-[#081028] mt-1 capitalize'>{!isProActive
               ? remainingMessages
               : `${remainingDays} Days`}</h2>
           </div>
@@ -182,6 +193,10 @@ function Billing({ user ,setUser}) {
 
             <p className='mt-2 opacity-80'>3 Months Access</p>
 
+            {user?.plan === "pro" && !isProActive && (
+              <p className='mt-3 rounded-xl bg-white/15 p-3 text-sm'>Your Pro plan has expired. Renew now to restore Pro access.</p>
+            )}
+
             <ul className='mt-6 space-y-4 opacity-90'>
 
               <li>Unlimited AI messages</li>
@@ -195,11 +210,11 @@ function Billing({ user ,setUser}) {
             <button
             onClick={handlePay}
 
-             disabled={user?.plan === "pro"} className={`mt-8 h-14 w-full rounded-2xl font-semibold transition ${user?.plan === "pro"
+             disabled={isProActive} className={`mt-8 h-14 w-full rounded-2xl font-semibold transition ${isProActive
                   ? "bg-emerald-200 text-black cursor-default"
                   : "bg-white text-[#081028] cursor-pointer"
                 }`}>
-                  {user?.plan === "pro" ? "Active Plan" : "Upgrade Now"}
+                  {isProActive ? "Active Plan" : user?.plan === "pro" ? "Renew Plan" : "Upgrade Now"}
 
                 </button>
 

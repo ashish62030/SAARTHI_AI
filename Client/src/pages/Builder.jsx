@@ -1,5 +1,5 @@
 import axios from 'axios';
-import React, { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { FiCopy, FiPlus, FiTrash2 } from 'react-icons/fi';
 import { CLIENT_URL, ServerUrl } from '../App';
 import toast from 'react-hot-toast';
@@ -43,6 +43,12 @@ function Builder({user , setUser}) {
   const [pageKeywords, setPageKeywords] = useState("");
 
   const [loading,setLoading]= useState(false)
+  const [currentTime, setCurrentTime] = useState(null)
+
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => setCurrentTime(Date.now()))
+    return () => cancelAnimationFrame(frame)
+  }, [])
 
   const addPage = ()=>{
     if(!pageName || !pagePath) return;
@@ -120,6 +126,11 @@ function Builder({user , setUser}) {
       )
       : 0;
 
+    const isProActive = user?.plan === "pro" &&
+      user?.proExpiresAt &&
+      currentTime !== null &&
+      new Date(user.proExpiresAt).getTime() > currentTime;
+
 
 
      const embedCode = `<script src="${CLIENT_URL}/assistant.js" data-user-id="${user?._id}"></script>`;
@@ -157,7 +168,7 @@ function Builder({user , setUser}) {
                 <div className='rounded-2xl border border-gray-100 bg-[#f8fafc] p-4'>
                   
                   <p className='text-sm text-gray-400'>Current Plan</p>
-                  <h2 className='text-xl font-bold text-[#081028] mt-1 capitalize'>{user?.plan}</h2>
+                  <h2 className='text-xl font-bold text-[#081028] mt-1 capitalize'>{isProActive ? "pro" : "free"}</h2>
                 </div>
 
 
@@ -174,10 +185,10 @@ function Builder({user , setUser}) {
 
                  <div className='rounded-2xl border border-gray-100 bg-[#f8fafc] p-4'>
                   
-                  <p className='text-sm text-gray-400'>{user?.plan === "free"
+                  <p className='text-sm text-gray-400'>{!isProActive
                       ? "Messages Left"
                       : "Plan Expiry"}</p>
-                  <h2 className='text-xl font-bold text-[#081028] mt-1 capitalize'>{user?.plan === "free"
+                  <h2 className='text-xl font-bold text-[#081028] mt-1 capitalize'>{!isProActive
                       ? remainingMessages
                       : `${remainingDays} Days`}</h2>
                 </div>

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import Home from './pages/Home'
 import Login from './pages/Login'
@@ -43,7 +43,7 @@ function App() {
         <Route path='/*' element={<ProtectedRoute user={user} loading={loading}>
           <Navbar setUser={setUser} user={user}/>
           <Routes>
-            <Route path='/' element={<Home user={user}/>} />
+            <Route path='/' element={<Home/>} />
             <Route path='/builder' element={<Builder user={user} setUser={setUser}/>}/>
             <Route path='/billing' element={<Billing user={user} setUser={setUser}/>}/>
 

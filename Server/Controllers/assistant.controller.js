@@ -36,17 +36,13 @@ export const askAssistant = async (req, res) => {
             return res.status(400).json({ message: "gemini apikey is not added" })
         }
 
-        if (user.plan === "free"
-            && user.totalMessages >= user.requestLimit) {
-            return res.status(400).json({ message: "Free limit reached" })
+        if (user.plan === "pro" && user.proExpiresAt && new Date(user.proExpiresAt) <= new Date()) {
+            user.plan = "free"
+            await user.save()
         }
 
-        if (user.plan === "pro" && new Date(user.proExpiresAt) < new Date()) {
-            user.plan === "free"
-
-            await user.save()
-
-            return res.status(400).json({ message: "Pro plan expired" })
+        if (user.plan === "free" && user.totalMessages >= user.requestLimit) {
+            return res.status(400).json({ message: "Free limit reached" })
         }
 
         const cleanMessage = message.toLowerCase()
@@ -189,12 +185,23 @@ ${message}
 
     } catch (error) {
 
-        console.log(error)
+        console.error("Assistant request failed:", error)
+
+        const message = /api key is invalid/i.test(error.message)
+            ? "Your Gemini API key is invalid. Update it in Assistant Builder."
+            : /quota exceeded/i.test(error.message)
+                ? "Your Gemini API quota is used up. Check your Gemini API plan or quota."
+                : /gemini is busy/i.test(error.message)
+                    ? "Gemini is busy right now. Please try again shortly."
+                    : /fetch failed|network|enotfound|econnrefused|timeout/i.test(error.message || "")
+                        ? "The server cannot reach Gemini. Check the server's internet connection and try again."
+                        : error.message
+                            ? `Assistant request failed: ${error.message.slice(0, 240)}`
+                            : "The assistant service could not complete this request. Check the server connection and Gemini API key, then try again."
 
         return  res.status(500).json({
                 success: false,
-                message:
-                    "Sorry, I could not answer that right now. Please try again in a moment.",
+                message,
             });
 
     }

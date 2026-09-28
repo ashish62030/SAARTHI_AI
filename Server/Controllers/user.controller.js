@@ -7,6 +7,10 @@ export const getCurrentUser = async (req,res) => {
         if(!user){
             return res.status(404).json({message:"Failed to get current user"})
         }
+        if (user.plan === "pro" && user.proExpiresAt && new Date(user.proExpiresAt) <= new Date()) {
+            user.plan = "free"
+            await user.save()
+        }
         return res.status(200).json(user)
     } catch (error) {
         console.log(error)
